@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import datetime as dt
+import scipy.stats as stats
 
 CONTRACTS=dict([(l,i+1) for i, l in enumerate(['F','G','H','J','K','M', 'N', 'Q', 'U', 'V', 'X', 'Z'])])
 
@@ -99,3 +100,11 @@ def gen_fc_3d(mkt, save=False):
         print('Saved 3d forward curve to %s'%fn)
     else:
         return mx
+
+def rCI(r, size, alpha=.05):
+    r_z = np.arctanh(r)
+    se = 1/np.sqrt(size-3)
+    z = stats.norm.ppf(1-alpha/2)
+    lo_z, hi_z = r_z-z*se, r_z+z*se
+    lo, hi = np.tanh((lo_z, hi_z))
+    return r_z, lo, hi
