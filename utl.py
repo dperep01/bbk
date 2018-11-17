@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 import scipy.stats as stats
+import math
 
 CONTRACTS=dict([(l,i+1) for i, l in enumerate(['F','G','H','J','K','M', 'N', 'Q', 'U', 'V', 'X', 'Z'])])
 
@@ -101,10 +102,17 @@ def gen_fc_3d(mkt, save=False):
     else:
         return mx
 
-def rCI(r, size, alpha=.05):
-    r_z = np.arctanh(r)
-    se = 1/np.sqrt(size-3)
-    z = stats.norm.ppf(1-alpha/2)
-    lo_z, hi_z = r_z-z*se, r_z+z*se
-    lo, hi = np.tanh((lo_z, hi_z))
-    return r_z, lo, hi
+def rCI(r, size, alpha=.05, method='pearson'):
+    assert(method in['pearson', 'spearman'])
+    if method == 'pearson':
+        r_z = np.arctanh(r)
+        se = 1/np.sqrt(size-3)
+        z = stats.norm.ppf(1-alpha/2)
+        lower_z, upper_z = r_z-z*se, r_z+z*se
+        lower, upper = np.tanh((lower_z, upper_z))
+    elif method == 'spearman':
+        stderr = 1.0 / math.sqrt(size - 3)
+        delta = 1.96 * stderr
+        lower = math.tanh(math.atanh(r) - delta)
+        upper = math.tanh(math.atanh(r) + delta)
+    return r, lower, upper
